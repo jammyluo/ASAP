@@ -124,6 +124,27 @@ def main(override_config: OmegaConf):
     if simulator_type == 'IsaacGym':
         import isaacgym
         
+        # 设置 IsaacGym headless 模式
+        if config.get("headless", False):
+            # 设置环境变量以启用 headless 模式
+            os.environ["ISAACGYM_HEADLESS"] = "1"
+            # 设置 CUDA_VISIBLE_DEVICES 以避免 GPU 显示问题
+            if "CUDA_VISIBLE_DEVICES" not in os.environ:
+                os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+            logger.info("IsaacGym running in headless mode")
+        else:
+            logger.info("IsaacGym running with GUI")
+        
+        # 确保 IsaacGym 在 headless 模式下正确初始化
+        try:
+            # 在 headless 模式下，可能需要设置一些额外的环境变量
+            if config.get("headless", False):
+                # 禁用图形界面相关的环境变量
+                os.environ["DISPLAY"] = ""
+                os.environ["XDG_RUNTIME_DIR"] = ""
+        except Exception as e:
+            logger.warning(f"Failed to set headless environment variables: {e}")
+
     from humanoidverse.agents.base_algo.base_algo import BaseAlgo  # noqa: E402
     from humanoidverse.utils.helpers import pre_process_config
     import torch
